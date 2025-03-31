@@ -17,10 +17,9 @@ export async function node(
   node.use(bodyParser.json());
 
 
-  const sanitizedInitialValue: 0 | 1 | null = isFaulty ? null : (initialValue === "?" ? null : initialValue as 0 | 1);
   const nodeState: NodeState = {
     killed: false,
-    x: sanitizedInitialValue,
+    x: isFaulty ? null : initialValue,
     decided: isFaulty ? null : false,
     k: isFaulty ? null : 0
   };
@@ -142,7 +141,7 @@ export async function node(
     }
 
     const { phase, round, value } = req.body;
-    if (typeof value === "number" && (value === 0 || value === 1)) {
+    if (typeof value === 'number' && (value === 0 || value === 1)) {
       if (phase === 1) {
         messagesPhase1.push({ round, value });
       } else if (phase === 2) {
@@ -160,11 +159,14 @@ export async function node(
       res.status(500).send("faulty");
       return;
     }
-    nodeState.k = 0;
-    nodeState.decided = false;
-    nodeState.x = sanitizedInitialValue;
     messagesPhase1 = [];
     messagesPhase2 = [];
+
+
+    nodeState.k = 0;
+
+    nodeState.decided = false; // Initialize to false instead of null
+    nodeState.x = isFaulty ? null : initialValue;
     setTimeout(benOrRound, 100);
     res.json({ success: true });
   });
